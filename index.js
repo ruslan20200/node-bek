@@ -9,3 +9,9 @@ console.log("10 / 5 =", result.ok ? result.value : result.error);
 
 const zeroResult = divide(10, 0);
 console.log("10 / 0 =", zeroResult.ok ? zeroResult.value : zeroResult.error);
+
+const invalidResult = add("a", 5);
+console.log("a + 5 =", invalidResult.error);
+
+const invalidDivideResult = divide(10, "b");
+console.log("10 / b =", invalidDivideResult.error);
