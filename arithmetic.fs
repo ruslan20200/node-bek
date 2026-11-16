@@ -10,6 +10,6 @@ module Arithmetic =
 
     let divide (a: float) (b: float) : Result<float, string> =
         if b = 0.0 then
-            Error "Division by zero is not allowed."
+            Error "Ошибка: на ноль делить нельзя."
         else
             Ok (a / b)

@@ -2,7 +2,7 @@
   "name": "node-bek",
   "version": "1.0.0",
   "private": true,
-  "description": "Four arithmetic functions with division by zero protection",
+  "description": "Четыре арифметические функции с проверкой ошибок",
   "main": "arithmetic.js",
   "scripts": {
     "start": "node index.js"
