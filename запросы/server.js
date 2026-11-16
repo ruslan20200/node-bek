@@ -45,18 +45,6 @@ function putUser(res, id, data) {
     }
 }
 
-function updateUser(res, id, data) {
-    const user = users.find(user => user.id === id);
-    if (!user) {
-        send(res, 404, { error: "Пользователь не найден." });
-    } else if (typeof data.name !== "string" || data.name.trim() === "") {
-        send(res, 400, { error: "Введите новое имя пользователя." });
-    } else {
-        user.name = data.name.trim();
-        send(res, 200, user);
-    }
-}
-
 function deleteUser(res, id) {
     const index = users.findIndex(user => user.id === id);
     if (index === -1) {
@@ -101,7 +89,7 @@ const server = http.createServer(async function (req, res) {
         }
 
         const id = match[1] ? Number(match[1]) : null;
-        const allowed = id === null ? ["GET", "POST"] : ["GET", "PUT", "PATCH", "DELETE"];
+        const allowed = id === null ? ["GET", "POST"] : ["GET", "PUT", "DELETE"];
         if (!allowed.includes(req.method)) {
             res.setHeader("Allow", allowed.join(", "));
             send(res, 405, { error: "Этот метод здесь не поддерживается." });
@@ -109,7 +97,7 @@ const server = http.createServer(async function (req, res) {
         }
 
         let data;
-        if (req.method === "POST" || req.method === "PUT" || req.method === "PATCH") {
+        if (req.method === "POST" || req.method === "PUT") {
             try {
                 data = await readData(req);
             } catch {
@@ -128,8 +116,6 @@ const server = http.createServer(async function (req, res) {
             postUser(res, data);
         } else if (req.method === "PUT") {
             putUser(res, id, data);
-        } else if (req.method === "PATCH") {
-            updateUser(res, id, data);
         } else if (req.method === "DELETE") {
             deleteUser(res, id);
         }

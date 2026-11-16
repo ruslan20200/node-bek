@@ -20,7 +20,6 @@
     <button onclick="sendRequest('GET', true)">GET по ID</button>
     <button onclick="sendRequest('POST')">POST</button>
     <button onclick="sendRequest('PUT')">PUT</button>
-    <button onclick="sendRequest('PATCH')">PATCH</button>
     <button onclick="sendRequest('DELETE')">DELETE</button>
 
     <p id="request">Запрос:</p>
@@ -33,12 +32,12 @@
             const name = document.getElementById("userName").value;
             let url = "/users";
 
-            if (byId || method === "PUT" || method === "PATCH" || method === "DELETE") {
+            if (byId || method === "PUT" || method === "DELETE") {
                 url += "/" + encodeURIComponent(id);
             }
 
             const options = { method: method };
-            if (method === "POST" || method === "PUT" || method === "PATCH") {
+            if (method === "POST" || method === "PUT") {
                 options.headers = { "Content-Type": "application/json" };
                 options.body = JSON.stringify({ name: name });
             }
