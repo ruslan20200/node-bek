@@ -1,0 +1,11 @@
+const { add, subtract, multiply, divide } = require("./arithmetic");
+
+console.log("10 + 5 =", add(10, 5));
+console.log("10 - 5 =", subtract(10, 5));
+console.log("10 * 5 =", multiply(10, 5));
+
+const result = divide(10, 5);
+console.log("10 / 5 =", result.ok ? result.value : result.error);
+
+const zeroResult = divide(10, 0);
+console.log("10 / 0 =", zeroResult.ok ? zeroResult.value : zeroResult.error);
