@@ -1,4 +1,6 @@
 const http = require("http");
+const fs = require("fs");
+const page = fs.readFileSync(require("path").join(__dirname, "index.html"), "utf8");
 
 const users = [{ id: 1, name: "Иван" }];
 let nextId = 2;
@@ -76,6 +78,22 @@ async function readData(req) {
 const server = http.createServer(async function (req, res) {
     try {
         const path = new URL(req.url, "http://localhost").pathname;
+        if (path === "/" && req.method === "GET") {
+            const html = fs.readFileSync(__dirname + "/index.html", "utf8");
+            res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+            res.end(html);
+            return;
+        }
+        if (path === "/") {
+            if (req.method === "GET") {
+                res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+                res.end(page);
+            } else {
+                res.setHeader("Allow", "GET");
+                send(res, 405, { error: "Для страницы используйте GET." });
+            }
+            return;
+        }
         const match = path.match(/^\/users(?:\/([1-9]\d*))?\/?$/);
         if (!match) {
             send(res, 404, { error: "Такого адреса нет. Используйте /users или /users/1." });
@@ -122,5 +140,7 @@ const server = http.createServer(async function (req, res) {
 });
 
 server.listen(3000, "127.0.0.1", function () {
-    console.log("Сервер запущен: http://localhost:3000/users");
+    console.log("Страница для проверки: http://localhost:3000");
+    console.log("Список пользователей: http://localhost:3000/users");
+    console.log("Для остановки нажмите Ctrl+C.");
 });

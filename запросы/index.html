@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Проверка запросов Node.js</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { margin: 0; background: #f3f5f8; color: #182235; font: 16px/1.5 system-ui, sans-serif; }
+        main { max-width: 1100px; margin: 36px auto; padding: 0 24px; }
+        h1 { font-size: 30px; margin: 8px 0; }
+        h2 { font-size: 19px; margin: 0 0 18px; }
+        p { color: #586477; margin: 8px 0 24px; }
+        .tag { color: #2459bd; font-weight: 650; font-size: 13px; }
+        .grid { display: grid; grid-template-columns: 1fr 1.2fr; gap: 20px; }
+        section { background: white; padding: 24px; border: 1px solid #dfe4ec; border-radius: 12px; }
+        label { display: block; margin: 16px 0 6px; font-size: 14px; font-weight: 600; }
+        input { width: 100%; border: 1px solid #b9c3d3; border-radius: 7px; padding: 11px 12px; font: inherit; }
+        button { border: 1px solid #c6cfdd; border-radius: 7px; padding: 11px 13px; background: white; color: #183b75; font: 600 14px system-ui; cursor: pointer; }
+        button:hover { background: #edf3ff; }
+        button:disabled { opacity: .5; cursor: wait; }
+        button:focus-visible, input:focus-visible { outline: 3px solid #80abff; outline-offset: 2px; }
+        .buttons { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 18px; }
+        .primary { color: white; background: #245dc6; border-color: #245dc6; }
+        .primary:hover { background: #174cae; }
+        .delete { color: #a0262b; }
+        .help { font-size: 13px; color: #647085; margin-top: 14px; }
+        .errors { padding-top: 18px; margin-top: 22px; border-top: 1px solid #e4e8ef; }
+        .errors .buttons { margin-top: 10px; }
+        .errors button { font-size: 12px; padding: 8px 10px; color: #566074; }
+        .request { font: 600 16px ui-monospace, monospace; word-break: break-word; }
+        .status { display: inline-block; padding: 4px 10px; margin: 14px 0; background: #e9eef5; border-radius: 5px; font-weight: 650; font-size: 14px; }
+        .ok { background: #e1f3e9; color: #16623e; }
+        .error { background: #fbe5e4; color: #962828; }
+        .caption { color: #647085; font-size: 13px; margin: 10px 0 6px; }
+        pre { background: #f4f6fa; border: 1px solid #e2e6ee; border-radius: 8px; padding: 16px; overflow: auto; white-space: pre-wrap; word-break: break-word; font: 14px/1.6 ui-monospace, monospace; margin: 0; }
+        #response { min-height: 145px; }
+        .bottom { margin-top: 20px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { text-align: left; border-bottom: 1px solid #edf0f5; padding: 10px; }
+        th { font-size: 13px; color: #637087; }
+        .row { display: flex; align-items: center; justify-content: space-between; gap: 15px; }
+        .row h2 { margin: 0; }
+        .row button { padding: 7px 11px; }
+        ol { padding-left: 22px; margin-bottom: 0; color: #586477; font-size: 14px; }
+        #history { margin: 14px 0 0; padding-left: 20px; font: 13px/1.8 ui-monospace, monospace; }
+        footer { color: #647085; font-size: 13px; margin: 20px 0; }
+        @media (max-width: 740px) { .grid { grid-template-columns: 1fr; } main { margin: 20px auto; padding: 0 14px; } section { padding: 18px; } h1 { font-size: 25px; } }
+    </style>
+</head>
+<body>
+<main>
+    <div class="tag">NODE.JS · LOCALHOST:3000</div>
+    <h1>Проверка HTTP-запросов</h1>
+    <p>Выбери действие — ниже появятся метод, статус и ответ настоящего сервера.</p>
+    <div class="grid">
+        <section>
+            <h2>Отправить запрос</h2>
+            <label for="userId">ID пользователя</label>
+            <input id="userId" type="number" min="1" step="1" value="1">
+            <label for="userName">Имя пользователя</label>
+            <input id="userName" type="text" value="Анна" placeholder="Например, Анна">
+            <div class="buttons">
+                <button class="primary" data-action="get">GET — список</button>
+                <button data-action="post">POST — добавить</button>
+                <button data-action="put">PUT — заменить</button>
+                <button data-action="patch">PATCH — изменить</button>
+                <button class="delete" data-action="delete">DELETE — удалить</button>
+                <button data-action="one">GET — по ID</button>
+            </div>
+            <div class="help">POST создаёт пользователя. PUT и PATCH меняют имя по выбранному ID. У пользователя здесь только одно поле — имя.</div>
+            <div class="errors">
+                <strong>Показать ошибки</strong>
+                <div class="buttons">
+                    <button data-action="400">400 — пустое имя</button>
+                    <button data-action="json">400 — неверный JSON</button>
+                    <button data-action="404">404 — нет пользователя</button>
+                    <button data-action="405">405 — неверный метод</button>
+                </div>
+            </div>
+        </section>
+        <section aria-live="polite">
+            <h2>Ответ сервера</h2>
+            <div id="request" class="request">Выбери запрос слева</div>
+            <div id="status" class="status">Ожидание</div>
+            <div class="caption">Тело запроса</div>
+            <pre id="body">Без тела</pre>
+            <div class="caption">Тело ответа</div>
+            <pre id="response">Здесь появится JSON от сервера.</pre>
+            <div class="caption">Последние запросы</div>
+            <ul id="history"></ul>
+        </section>
+    </div>
+    <section class="bottom">
+        <div class="row"><h2>Пользователи на сервере</h2><button id="refresh">Обновить список</button></div>
+        <table><thead><tr><th>ID</th><th>Имя</th><th>Выбрать</th></tr></thead><tbody id="users"></tbody></table>
+        <div id="listMessage" class="help"></div>
+    </section>
+    <section class="bottom">
+        <h2>Как показать работу</h2>
+        <ol>
+            <li>Нажми GET — получишь список и статус 200.</li>
+            <li>Введи имя, нажми POST — появится новый пользователь и статус 201. Его ID подставится автоматически.</li>
+            <li>Измени имя и нажми PUT, затем PATCH — в списке будет новое имя.</li>
+            <li>Нажми DELETE, затем GET по тому же ID — получишь 404.</li>
+            <li>Кнопками ошибок покажи статусы 400, 404 и 405.</li>
+        </ol>
+    </section>
+    <footer>Данные хранятся в памяти и сбрасываются после перезапуска сервера. Остановка в терминале: Ctrl+C.</footer>
+</main>
+<script>
+    const idInput = document.getElementById("userId");
+    const nameInput = document.getElementById("userName");
+    const requestText = document.getElementById("request");
+    const statusText = document.getElementById("status");
+    const bodyText = document.getElementById("body");
+    const responseText = document.getElementById("response");
+    const history = document.getElementById("history");
+    const buttons = document.querySelectorAll("button[data-action]");
+
+    async function refreshUsers() {
+        try {
+            const response = await fetch("/users");
+            if (!response.ok) throw new Error("Не удалось получить список.");
+            const users = await response.json();
+            const table = document.getElementById("users");
+            table.replaceChildren();
+            for (const user of users) {
+                const row = document.createElement("tr");
+                const id = document.createElement("td");
+                const name = document.createElement("td");
+                const action = document.createElement("td");
+                const select = document.createElement("button");
+                id.textContent = user.id;
+                name.textContent = user.name;
+                select.textContent = "Выбрать";
+                select.onclick = function () {
+                    idInput.value = user.id;
+                    nameInput.value = user.name;
+                };
+                action.append(select);
+                row.append(id, name, action);
+                table.append(row);
+            }
+            document.getElementById("listMessage").textContent = users.length === 0 ? "Список пуст. Добавь пользователя через POST." : "Нажми «Выбрать», чтобы подставить ID и имя.";
+        } catch (error) {
+            document.getElementById("listMessage").textContent = "Сервер недоступен. Проверь, что он запущен в терминале.";
+        }
+    }
+
+    async function run(action) {
+        let method = "GET";
+        let path = "/users";
+        let body;
+        if (action === "post") {
+            method = "POST";
+            body = JSON.stringify({ name: nameInput.value });
+        } else if (action === "put" || action === "patch") {
+            method = action.toUpperCase();
+            path += "/" + encodeURIComponent(idInput.value.trim());
+            body = JSON.stringify({ name: nameInput.value });
+        } else if (action === "delete" || action === "one") {
+            method = action === "delete" ? "DELETE" : "GET";
+            path += "/" + encodeURIComponent(idInput.value.trim());
+        } else if (action === "400") {
+            method = "POST";
+            body = JSON.stringify({ name: "" });
+        } else if (action === "json") {
+            method = "POST";
+            body = '{"name":';
+        } else if (action === "404") {
+            path = "/users/999999999";
+        } else if (action === "405") {
+            method = "DELETE";
+        }
+
+        requestText.textContent = method + " " + path;
+        bodyText.textContent = body === undefined ? "Без тела" : body;
+        statusText.textContent = "Отправка…";
+        statusText.className = "status";
+        buttons.forEach(button => button.disabled = true);
+        try {
+            const response = await fetch(path, { method: method, ...(body === undefined ? {} : { headers: { "Content-Type": "application/json" }, body: body }) });
+            const data = await response.json();
+            statusText.textContent = response.status + " " + response.statusText;
+            statusText.className = "status " + (response.ok ? "ok" : "error");
+            responseText.textContent = JSON.stringify(data, null, 2);
+            const item = document.createElement("li");
+            item.textContent = method + " " + path + " → " + response.status;
+            history.prepend(item);
+            if (history.children.length > 8) history.lastElementChild.remove();
+            if (method === "POST" && response.ok) idInput.value = data.id;
+            if (method !== "GET" && response.ok) await refreshUsers();
+        } catch (error) {
+            statusText.textContent = "Ошибка соединения";
+            statusText.className = "status error";
+            responseText.textContent = "Не удалось связаться с сервером. Проверь терминал и запусти сервер снова.";
+        } finally {
+            buttons.forEach(button => button.disabled = false);
+        }
+    }
+
+    buttons.forEach(button => button.onclick = function () { run(button.dataset.action); });
+    document.getElementById("refresh").onclick = refreshUsers;
+    refreshUsers();
+</script>
+</body>
+</html>
